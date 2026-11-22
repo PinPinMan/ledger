@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ledger – finance tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--ink:#17202b;--mute:#6b7685;--line:#e4e7ec;--in:#0f766e;--out:#c2410c;--accent:#17202b;--track:#eceef2;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151c;--surface:#171e27;--ink:#e8ecf1;--mute:#8d98a7;--line:#252e3a;--in:#2dd4bf;--out:#fb923c;--accent:#e8ecf1;--track:#222b36;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151c;--surface:#171e27;--ink:#e8ecf1;--mute:#8d98a7;--line:#252e3a;--in:#2dd4bf;--out:#fb923c;--accent:#e8ecf1;--track:#222b36;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.wrap{max-width:880px;margin:0 auto;padding:28px 18px 64px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:22px}
+h1{font-size:22px;font-weight:700;margin:0;letter-spacing:-.02em}
+h2{font-size:16px;font-weight:700;margin:0 0 14px}
+.sub{color:var(--mute);font-size:13px}
+nav{display:flex;gap:4px;background:var(--track);padding:4px;border-radius:12px;margin-bottom:16px;overflow-x:auto}
+nav button{flex:1;border:0;background:none;color:var(--mute);font:500 14px inherit;font-family:inherit;padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.stat .l{color:var(--mute);font-size:13px}
+.stat .v{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.in{color:var(--in)}.out{color:var(--out)}
+input,select,button{font-family:inherit;font-size:14px}
+input,select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:0;width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;font-weight:500;cursor:pointer;min-height:38px;text-align:left;border-radius:10px;transition:border-color .15s}
+input[type=date]:hover,input[type=month]:hover{border-color:var(--mute)}
+input[type=date]::-webkit-calendar-picker-indicator,input[type=month]::-webkit-calendar-picker-indicator{opacity:.45;cursor:pointer;border-radius:4px;padding:2px}
+input[type=date]::-webkit-calendar-picker-indicator:hover,input[type=month]::-webkit-calendar-picker-indicator:hover{opacity:1}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:4px}
+.btn{background:var(--accent);color:var(--bg);border:0;border-radius:9px;padding:10px 16px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:none;color:var(--mute);border:1px solid var(--line);padding:8px 12px}
+.x{background:none;border:0;color:var(--mute);cursor:pointer;font-size:18px;line-height:1;padding:4px 8px;border-radius:6px}
+.x:hover{color:var(--out)}
+.tools{display:flex;gap:8px;align-items:center}
+.tools select{width:auto}
+.range{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:16px}
+.range label{display:flex;align-items:center;gap:8px;margin:0;font-size:13px}
+.range input{width:auto}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .m{font-size:13px;color:var(--mute)}
+.amt{font-weight:500;white-space:nowrap}
+.bar{height:8px;background:var(--track);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bar i.over{background:var(--out)}
+.empty{color:var(--mute);padding:18px 0;text-align:center}
+.cat{display:grid;grid-template-columns:1fr auto;gap:4px 14px;padding:12px 0;border-top:1px solid var(--line)}
+.cat:first-of-type{border-top:0}
+.cat .tg{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}
+.cat .tg input{width:96px;padding:5px 8px;font-size:13px}
+.cat .bar{grid-column:1/-1;margin-top:4px}
+.head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.head h2{margin:0}.head input{width:240px;max-width:100%}
+.debt{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
+.debt:first-of-type{border-top:0}
+.dbody{flex:1;min-width:220px}
+.debt-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.pay{display:flex;gap:8px;margin-top:12px;max-width:340px}
+.ring{position:relative;width:108px;height:108px;flex:none}
+.ring svg{width:100%;height:100%}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.15}
+.ring b{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.ring span{font-size:11px;color:var(--mute)}
+.bal{width:130px;text-align:right}
+.grp{display:grid;grid-template-columns:1fr auto;gap:2px 14px;padding:14px 0 4px;border-top:1px solid var(--line)}
+.grp:first-child{border-top:0;padding-top:0}
+.grp .bar{grid-column:1/-1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Ledger</h1><div class="sub">Your money in, money out and debts, in one place.</div></div>
+    <div class="tools">
+      <button class="btn ghost" id="theme" type="button"></button>
+      <select id="cur" aria-label="Currency"><option>USD</option><option>SGD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>MYR</option><option>CAD</option><option>NZD</option><option>INR</option></select>
+    </div>
+  </header>
+
+  <nav id="tabs">
+    <button data-t="over" class="on">Overview</button>
+    <button data-t="tx">Transactions</button>
+    <button data-t="debt">Debts</button>
+    <button data-t="sus">Sustainability</button>
+    <button data-t="bud">Spending</button>
+  </nav>
+
+  <!-- Period filter: applies to Overview, Transactions and Spending -->
+  <div class="range" id="range">
+    <label>From <input type="month" id="from"></label>
+    <label>To <input type="month" id="to"></label>
+    <button class="btn ghost" id="thisMonth" type="button">This month</button>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <section id="over">
+    <div class="stats" id="overStats"></div>
+    <div class="panel"><h2>Where the money went</h2><div id="overCats"></div></div>
+  </section>
+
+  <!-- ============ TRANSACTIONS ============ -->
+  <section id="tx" hidden>
+    <div class="panel">
+      <h2>Add a transaction</h2>
+      <div class="form">
+        <div><label for="fType">Type</label><select id="fType"><option value="out">Money out</option><option value="in">Money in</option></select></div>
+        <div><label for="fCat">Category</label><select id="fCat"></select></div>
+        <div><label for="fAmt">Amount</label><input id="fAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div><label for="fDate">Date</label><input id="fDate" type="date"></div>
+        <div><label for="fNote">Note</label><input id="fNote" placeholder="Optional"></div>
+        <button class="btn" id="addTx">Add</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="head"><h2>Transactions <span class="sub" id="txCount"></span></h2><input type="search" id="q" placeholder="Search note, category, amount" aria-label="Search transactions"></div>
+      <div id="txList"></div>
+    </div>
+  </section>
+
+  <!-- ============ DEBTS ============ -->
+  <section id="debt" hidden>
+    <div class="panel">
+      <h2>Add a debt</h2>
+      <div class="form">
+        <div><label for="dName">Name</label><input id="dName" placeholder="e.g. House mortgage"></div>
+        <div><label for="dType">Type</label><select id="dType"><option>Mortgage</option><option>House</option><option>Car</option><option>Other</option></select></div>
+        <div><label for="dTotal">Amount owed</label><input id="dTotal" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div><label for="dMonthly">Monthly payment</label><input id="dMonthly" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <button class="btn" id="addDebt">Add debt</button>
+      </div>
+    </div>
+    <div class="panel"><h2>Your debts</h2><div id="debtList"></div></div>
+  </section>
+
+  <!-- ============ SUSTAINABILITY ============ -->
+  <section id="sus" hidden>
+    <div class="stats" id="susStats"></div>
+    <div class="panel"><h2>How long you can last</h2><div id="runway"></div></div>
+    <div class="panel">
+      <h2>Add an account</h2>
+      <div class="form">
+        <div><label for="aName">Bank or provider</label><input id="aName" placeholder="e.g. Chase savings"></div>
+        <div><label for="aType">Type</label><select id="aType"><option>Cash</option><option>Bank savings</option><option>Stocks</option><option>Bonds</option><option>Funds</option></select></div>
+        <div><label for="aBal">Balance</label><input id="aBal" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <button class="btn" id="addAcc">Add account</button>
+      </div>
+    </div>
+    <div class="panel"><h2>Your assets</h2><div id="accList"></div></div>
+  </section>
+
+  <!-- ============ SPENDING ============ -->
+  <section id="bud" hidden>
+    <div class="stats" id="budStats"></div>
+    <div class="panel">
+      <h2>Average monthly spending</h2>
+      <p class="sub" id="budNote" style="margin-top:-8px"></p>
+      <div id="budList"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   0. HELPERS & STATE
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+const sum = a => a.reduce((x, t) => x + t.amount, 0);
+const emptyMsg = t => `<div class="empty">${t}</div>`;
+const fmt = n => new Intl.NumberFormat('en', {style:'currency', currency:S.settings.cur || 'USD'}).format(n || 0);
+
+// In-memory copy of every IndexedDB store (read once at start-up, kept in sync on write)
+const S = {settings:{}, categories:[], transactions:[], debts:[], accounts:[]};
+
+const DEFAULT_CATS = [
+  ['Food','out','living'],['Phone','out','living'],['Water','out','living'],['Electricity','out','living'],
+  ['Transport','out','other'],['Debt payment','out','debt'],['Other','out','other'],
+  ['Salary','in',''],['Other income','in','']
+].map(([name, kind, group]) => ({id: kind + '-' + name.toLowerCase().replace(/ /g, '-'), name, kind, group, target: 0}));
+const catName = id => (S.categories.find(c => c.id === id) || {}).name || 'Other';
+
+/* =====================================================================
+   1. DATABASE (IndexedDB)
+   Stores: settings, categories, transactions, debts, accounts
+   ===================================================================== */
+let db;
+function dbOpen() {
+  return new Promise((ok, fail) => {
+    const r = indexedDB.open('ledger', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore('settings', {keyPath:'key'});
+      d.createObjectStore('categories', {keyPath:'id'});
+      const t = d.createObjectStore('transactions', {keyPath:'id'});
+      t.createIndex('date', 'date'); t.createIndex('categoryId', 'categoryId'); t.createIndex('debtId', 'debtId');
+      d.createObjectStore('debts', {keyPath:'id'});
+      d.createObjectStore('accounts', {keyPath:'id'});
+    };
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => fail(r.error);
+  });
+}
+const dbReq = (store, mode, fn) => new Promise((ok, fail) => {
+  const t = db.transaction(store, mode), r = fn(t.objectStore(store));
+  t.oncomplete = () => ok(r.result); t.onerror = () => fail(t.error);
+});
+const dbAll = s => dbReq(s, 'readonly', o => o.getAll());
+const dbPut = (s, v) => dbReq(s, 'readwrite', o => o.put(v));
+const dbDel = (s, k) => dbReq(s, 'readwrite', o => o.delete(k));
+const quiet = p => p.catch(e => console.warn('Save failed', e));
+
+// Write helpers: update memory first, then persist
+const create = (store, obj) => { S[store].push(obj); quiet(dbPut(store, obj)); return obj; };
+const update = (store, obj) => quiet(dbPut(store, obj));
+const remove = (store, id) => { S[store] = S[store].filter(x => x.id !== id); quiet(dbDel(store, id)); };
+const setSetting = (key, value) => { S.settings[key] = value; quiet(dbPut('settings', {key, value})); };
+
+// One-time import of data saved by the earlier (localStorage) version
+async function migrateFromLocalStorage() {
+  let old; try { old = JSON.parse(localStorage.getItem('ledger-v1')); } catch (e) {}
+  if (!old) return;
+  const cid = (name, kind) => (S.categories.find(c => c.name === name && c.kind === kind) || {}).id;
+  (old.tx || []).forEach(t => create('transactions', {id:t.id, type:t.type, categoryId:cid(t.cat, t.type), debtId:null, amount:t.amt, date:t.date, note:t.note || ''}));
+  (old.debts || []).forEach(d => create('debts', {id:d.id, name:d.name, type:d.type, startAmount:d.start, balance:d.left, monthly:d.monthly}));
+  (old.accounts || []).forEach(a => create('accounts', {id:a.id, name:a.name, type:a.cat, balance:a.bal}));
+  Object.keys(old.budget || {}).forEach(n => { const c = S.categories.find(c => c.name === n); if (c && +old.budget[n]) { c.target = +old.budget[n]; update('categories', c); } });
+  if (old.cur) setSetting('cur', old.cur);
+  if (old.theme) setSetting('theme', old.theme);
+  try { localStorage.removeItem('ledger-v1'); } catch (e) {}
+}
+
+/* =====================================================================
+   2. PERIOD FILTER (shared by Overview, Transactions, Spending)
+   ===================================================================== */
+const R = {from: today().slice(0, 7), to: today().slice(0, 7)};
+const inRange = () => S.transactions.filter(t => { const m = t.date.slice(0, 7); return m >= R.from && m <= R.to; });
+const monthCount = () => { const [a, b] = R.from.split('-'), [c, d] = R.to.split('-'); return (c - a) * 12 + (d - b) + 1; };
+const spendBy = list => { const o = {}; list.filter(t => t.type === 'out').forEach(t => o[t.categoryId] = (o[t.categoryId] || 0) + t.amount); return o; };
+function syncRangeInputs() { $('#from').value = R.from; $('#to').value = R.to; }
+function ensureInRange(date) { const m = date.slice(0, 7); if (m < R.from) R.from = m; if (m > R.to) R.to = m; syncRangeInputs(); }
+function initRange() {
+  const change = e => {
+    R.from = $('#from').value || R.from; R.to = $('#to').value || R.to;
+    if (R.from > R.to) { if (e.target.id === 'from') R.to = R.from; else R.from = R.to; }
+    syncRangeInputs(); render();
+  };
+  $('#from').onchange = $('#to').onchange = change;
+  $('#thisMonth').onclick = () => { R.from = R.to = today().slice(0, 7); syncRangeInputs(); render(); };
+}
+
+/* =====================================================================
+   3. OVERVIEW TAB
+   ===================================================================== */
+function catBars(spent) {
+  const ids = Object.keys(spent).sort((a, b) => spent[b] - spent[a]);
+  if (!ids.length) return emptyMsg('No spending in this period.');
+  return ids.map(id => `<div class="cat"><span>${esc(catName(id))}</span><span class="amt">${fmt(spent[id])}</span><div class="bar"><i style="width:${spent[id] / spent[ids[0]] * 100}%"></i></div></div>`).join('');
+}
+function renderOverview(list) {
+  const inc = sum(list.filter(t => t.type === 'in')), out = sum(list.filter(t => t.type === 'out'));
+  const owed = S.debts.reduce((x, d) => x + d.balance, 0);
+  $('#overStats').innerHTML = `
+    <div class="stat"><div class="l">Money in</div><div class="v in">${fmt(inc)}</div></div>
+    <div class="stat"><div class="l">Money out</div><div class="v out">${fmt(out)}</div></div>
+    <div class="stat"><div class="l">Left over</div><div class="v">${fmt(inc - out)}</div></div>
+    <div class="stat"><div class="l">Total debt</div><div class="v">${fmt(owed)}</div></div>`;
+  $('#overCats').innerHTML = catBars(spendBy(list));
+}
+
+/* =====================================================================
+   4. TRANSACTIONS TAB
+   ===================================================================== */
+function fillTxCategories() {
+  const kind = $('#fType').value;
+  $('#fCat').innerHTML = S.categories.filter(c => c.kind === kind).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+}
+function renderTransactions(list) {
+  const q = $('#q').value.trim().toLowerCase();
+  const rows = list
+    .filter(t => !q || [t.note, catName(t.categoryId), t.date, t.amount].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => b.date.localeCompare(a.date));
+  $('#txCount').textContent = rows.length ? `(${rows.length})` : '';
+  $('#txList').innerHTML = rows.length ? rows.map(t => `
+    <div class="row"><div class="main"><div class="t">${esc(t.note || catName(t.categoryId))}</div><div class="m">${esc(catName(t.categoryId))} · ${t.date}</div></div>
+    <div class="amt ${t.type}">${t.type === 'in' ? '+' : '−'}${fmt(t.amount)}</div>
+    <button class="x" data-del="${t.id}" aria-label="Delete transaction">×</button></div>`).join('')
+    : emptyMsg(q ? 'No transactions match your search.' : 'Nothing recorded in this period.');
+}
+function initTransactions() {
+  $('#fDate').value = today();
+  $('#fType').onchange = fillTxCategories;
+  $('#q').oninput = () => renderTransactions(inRange());
+  $('#addTx').onclick = () => {
+    const amount = parseFloat($('#fAmt').value);
+    if (!(amount > 0)) { $('#fAmt').focus(); return; }
+    const date = $('#fDate').value || today();
+    create('transactions', {id:uid(), type:$('#fType').value, categoryId:$('#fCat').value, debtId:null, amount, date, note:$('#fNote').value.trim()});
+    $('#fAmt').value = ''; $('#fNote').value = '';
+    ensureInRange(date); render();
+  };
+  $('#tx').addEventListener('click', e => {
+    if (e.target.dataset.del) { remove('transactions', e.target.dataset.del); render(); }
+  });
+}
+
+/* =====================================================================
+   5. DEBTS TAB  (quarter-ring timer)
+   ===================================================================== */
+const QUARTER_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+function ring(p, big, small) {
+  const C = 2 * Math.PI * 40, len = C / 4 - 12; let s = '';
+  for (let i = 0; i < 4; i++) {
+    const tr = `rotate(${-90 + i * 90 + 8.6} 50 50)`, f = Math.max(0, Math.min(1, p * 4 - i));
+    s += `<circle cx="50" cy="50" r="40" fill="none" stroke="var(--track)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${len} ${C}" transform="${tr}"/>`;
+    if (f > 0) s += `<circle cx="50" cy="50" r="40" fill="none" stroke="${QUARTER_COLORS[i]}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${Math.max(len * f, .1)} ${C}" transform="${tr}"/>`;
+  }
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${s}</svg><div class="c"><b>${big}</b><span>${small}</span></div>`;
+}
+function renderDebts() {
+  $('#debtList').innerHTML = S.debts.length ? S.debts.map(d => {
+    const paid = d.startAmount > 0 ? Math.min(100, (d.startAmount - d.balance) / d.startAmount * 100) : 100;
+    const months = d.monthly > 0 && d.balance > 0 ? Math.ceil(d.balance / d.monthly) : null;
+    return `<div class="debt"><div class="ring">${ring(paid / 100, months !== null ? months : Math.round(paid) + '%', months !== null ? 'months left' : 'paid off')}</div>
+      <div class="dbody"><div class="debt-top"><div><div class="t" style="font-weight:500">${esc(d.name)}</div><div class="sub">${d.type}${d.monthly ? ' · ' + fmt(d.monthly) + ' a month' : ''}</div></div>
+      <div style="text-align:right"><div class="amt">${fmt(d.balance)}</div><div class="sub">of ${fmt(d.startAmount)}</div></div></div>
+      <div class="sub" style="margin-top:6px">${Math.round(paid)}% paid off</div>
+      <div class="pay"><input type="number" min="0" step="0.01" placeholder="${d.monthly || 'Amount'}" id="p-${d.id}" aria-label="Payment amount"><button class="btn" data-pay="${d.id}">Log payment</button><button class="x" data-rm="${d.id}" aria-label="Remove debt">×</button></div></div></div>`;
+  }).join('') : emptyMsg('No debts added. Add a mortgage, car loan or house loan above.');
+}
+function initDebts() {
+  $('#addDebt').onclick = () => {
+    const name = $('#dName').value.trim(), total = parseFloat($('#dTotal').value), monthly = parseFloat($('#dMonthly').value) || 0;
+    if (!name) { $('#dName').focus(); return; }
+    if (!(total >= 0)) { $('#dTotal').focus(); return; }
+    create('debts', {id:uid(), name, type:$('#dType').value, startAmount:total, balance:total, monthly});
+    ['dName', 'dTotal', 'dMonthly'].forEach(i => $('#' + i).value = ''); render();
+  };
+  $('#debt').addEventListener('click', e => {
+    const d = e.target.dataset;
+    if (d.rm) { remove('debts', d.rm); render(); }
+    if (d.pay) {
+      const debt = S.debts.find(x => x.id === d.pay), inp = $('#p-' + d.pay);
+      const amount = Math.min(parseFloat(inp.value) || debt.monthly, debt.balance);
+      if (!(amount > 0)) { inp.focus(); return; }
+      debt.balance -= amount; update('debts', debt);
+      create('transactions', {id:uid(), type:'out', categoryId:'out-debt-payment', debtId:debt.id, amount, date:today(), note:debt.name + ' payment'});
+      ensureInRange(today()); render();
+    }
+  });
+}
+
+/* =====================================================================
+   6. SUSTAINABILITY TAB  (net worth, assets, runway)
+   ===================================================================== */
+const ACCOUNT_TYPES = ['Cash', 'Bank savings', 'Stocks', 'Bonds', 'Funds'];
+const span = m => { if (!isFinite(m)) return 'No limit'; if (m < 1) return 'Under a month'; const y = Math.floor(m / 12), r = Math.floor(m % 12); return (y ? y + ' yr ' : '') + r + ' mo'; };
+function renderSustainability() {
+  const A = S.accounts, tot = t => A.filter(a => a.type === t).reduce((x, a) => x + a.balance, 0);
+  const liquid = tot('Cash') + tot('Bank savings'), inv = tot('Stocks') + tot('Bonds') + tot('Funds'), all = liquid + inv;
+  const debt = S.debts.reduce((x, d) => x + d.balance, 0), net = all - debt;
+  // Runway uses your average of the last 3 months with activity (not the period filter)
+  const ms = [...new Set(S.transactions.map(t => t.date.slice(0, 7)))].sort().slice(-3);
+  let aIn = 0, aOut = 0;
+  ms.forEach(m => { const l = S.transactions.filter(t => t.date.slice(0, 7) === m); aIn += sum(l.filter(t => t.type === 'in')) / ms.length; aOut += sum(l.filter(t => t.type === 'out')) / ms.length; });
+  const flow = aIn - aOut, burn = flow < 0 ? -flow : aOut;
+  $('#susStats').innerHTML = `
+    <div class="stat"><div class="l">Net worth</div><div class="v ${net < 0 ? 'out' : ''}">${fmt(net)}</div></div>
+    <div class="stat"><div class="l">Cash and bank</div><div class="v">${fmt(liquid)}</div></div>
+    <div class="stat"><div class="l">Investments</div><div class="v">${fmt(inv)}</div></div>
+    <div class="stat"><div class="l">Debt</div><div class="v">${fmt(debt)}</div></div>`;
+  $('#runway').innerHTML = !ms.length || burn <= 0 ? emptyMsg('Add your income and spending in Transactions to see how long your money lasts.') : `
+    <p class="sub" style="margin:-6px 0 8px">${flow < 0 ? 'You’re spending ' + fmt(-flow) + ' a month more than you earn.' : 'Your income covers your spending. If it stopped, you’d draw ' + fmt(aOut) + ' a month.'}</p>
+    <div class="row"><div class="main t">Cash and bank savings only</div><div class="amt">${span(liquid / burn)}</div></div>
+    <div class="row"><div class="main t">Including investments</div><div class="amt">${span(all / burn)}</div></div>`;
+  $('#accList').innerHTML = A.length ? ACCOUNT_TYPES.filter(t => A.some(a => a.type === t)).map(t =>
+    `<div class="grp"><span style="font-weight:500">${t}</span><span class="amt">${fmt(tot(t))}</span><div class="bar"><i style="width:${all > 0 ? tot(t) / all * 100 : 0}%"></i></div></div>` +
+    A.filter(a => a.type === t).map(a => `<div class="row"><div class="main"><div class="t">${esc(a.name)}</div></div><input type="number" class="bal" step="0.01" value="${a.balance}" data-bal="${a.id}" aria-label="Balance"><button class="x" data-ra="${a.id}" aria-label="Remove account">×</button></div>`).join('')
+  ).join('') : emptyMsg('No accounts yet. Add your cash, bank savings and investments above.');
+}
+function initSustainability() {
+  $('#addAcc').onclick = () => {
+    const name = $('#aName').value.trim(), balance = parseFloat($('#aBal').value);
+    if (!name) { $('#aName').focus(); return; }
+    if (!(balance >= 0)) { $('#aBal').focus(); return; }
+    create('accounts', {id:uid(), name, type:$('#aType').value, balance});
+    $('#aName').value = ''; $('#aBal').value = ''; render();
+  };
+  $('#sus').addEventListener('click', e => { if (e.target.dataset.ra) { remove('accounts', e.target.dataset.ra); render(); } });
+  $('#sus').addEventListener('change', e => {
+    const a = S.accounts.find(x => x.id === e.target.dataset.bal);
+    if (a) { a.balance = parseFloat(e.target.value) || 0; update('accounts', a); render(); }
+  });
+}
+
+/* =====================================================================
+   7. SPENDING TAB  (averages over the selected period, targets)
+   ===================================================================== */
+function renderSpending(list) {
+  const n = monthCount(), spent = spendBy(list), total = sum(list.filter(t => t.type === 'out')) / n;
+  const living = S.categories.filter(c => c.group === 'living').reduce((x, c) => x + (spent[c.id] || 0), 0) / n;
+  const due = S.debts.reduce((x, d) => x + (d.balance > 0 ? d.monthly : 0), 0);
+  $('#budStats').innerHTML = `
+    <div class="stat"><div class="l">Average a month</div><div class="v">${fmt(total)}</div></div>
+    <div class="stat"><div class="l">Living expenses</div><div class="v">${fmt(living)}</div></div>
+    <div class="stat"><div class="l">Debt repayments due</div><div class="v">${fmt(due)}</div></div>`;
+  $('#budNote').textContent = `Averages cover ${n} month${n > 1 ? 's' : ''} (${R.from === R.to ? R.from : R.from + ' to ' + R.to}). Set a monthly target per category to compare.`;
+  $('#budList').innerHTML = total ? S.categories.filter(c => c.kind === 'out').map(c => {
+    const avg = (spent[c.id] || 0) / n, tg = c.target || 0, pct = Math.min(100, avg / (tg || total) * 100);
+    return `<div class="cat"><div><span>${esc(c.name)}</span><div class="sub">Average ${fmt(avg)} a month · ${Math.round(avg / total * 100)}% of spending</div></div>
+      <div class="tg">Target <input type="number" min="0" step="1" value="${tg || ''}" data-tg="${c.id}" placeholder="0" aria-label="${esc(c.name)} target"></div>
+      <div class="bar"><i class="${tg && avg > tg ? 'over' : ''}" style="width:${pct}%"></i></div></div>`;
+  }).join('') : emptyMsg('No spending in this period.');
+}
+function initSpending() {
+  $('#bud').addEventListener('change', e => {
+    const c = S.categories.find(x => x.id === e.target.dataset.tg);
+    if (c) { c.target = parseFloat(e.target.value) || 0; update('categories', c); render(); }
+  });
+}
+
+/* =====================================================================
+   8. APP SHELL  (tabs, theme, currency, start-up)
+   ===================================================================== */
+function render() {
+  const list = inRange();
+  renderOverview(list); renderTransactions(list); renderDebts(); renderSustainability(); renderSpending(list);
+}
+const isDark = () => S.settings.theme ? S.settings.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+function applyTheme() {
+  if (S.settings.theme) document.documentElement.dataset.theme = S.settings.theme;
+  $('#theme').textContent = isDark() ? 'Light mode' : 'Dark mode';
+}
+function initShell() {
+  $('#tabs').onclick = e => {
+    const t = e.target.dataset.t; if (!t) return;
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b === e.target));
+    ['over', 'tx', 'debt', 'sus', 'bud'].forEach(id => $('#' + id).hidden = id !== t);
+    $('#range').hidden = !['over', 'tx', 'bud'].includes(t);
+  };
+  $('#theme').onclick = () => { setSetting('theme', isDark() ? 'light' : 'dark'); applyTheme(); };
+  $('#cur').onchange = () => { setSetting('cur', $('#cur').value); render(); };
+}
+async function boot() {
+  initShell(); initRange(); initTransactions(); initDebts(); initSustainability(); initSpending();
+  try {
+    db = await dbOpen();
+    (await dbAll('settings')).forEach(r => S.settings[r.key] = r.value);
+    for (const s of ['categories', 'transactions', 'debts', 'accounts']) S[s] = await dbAll(s);
+    if (!S.categories.length) DEFAULT_CATS.forEach(c => create('categories', {...c}));
+    await migrateFromLocalStorage();
+  } catch (e) {
+    console.warn('IndexedDB unavailable, running in memory only', e);
+    if (!S.categories.length) S.categories = DEFAULT_CATS.map(c => ({...c}));
+  }
+  $('#cur').value = S.settings.cur || 'USD';
+  syncRangeInputs(); fillTxCategories(); applyTheme(); render();
+}
+boot();
+</script>
+</body>
+</html>
